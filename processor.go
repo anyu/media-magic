@@ -18,7 +18,7 @@ type processor struct {
 	metadata  filesMetadata
 }
 
-func (p *processor) RenameFiles(pattern string) {
+func (p *processor) renameFiles(pattern string) {
 	filesProcessed := 0
 	for _, f := range p.fileNames {
 		fileInfo, err := os.Stat(f)
@@ -41,7 +41,7 @@ func (p *processor) RenameFiles(pattern string) {
 	p.metadata.filesProcessedCount = filesProcessed
 }
 
-func (p *processor) PrintSummary() {
+func (p *processor) printSummary() {
 	fmt.Printf("Number of files found: %d\n", p.metadata.filesFoundCount)
 	fmt.Printf("Number of files renamed: %d\n", p.metadata.filesProcessedCount)
 	fmt.Printf("Number of files skipped: %d\n", p.metadata.filesSkippedCount)

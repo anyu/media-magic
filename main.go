@@ -21,8 +21,8 @@ const (
 func main() {
 
 	mediaDir := flag.String("source", "", "Path to source directory with unorganized media files")
-	outputDir := flag.String("output", "", "Path to output directory for renamed media files")
-	namingPattern := flag.String("naming-pattern", "", "Naming pattern for renamed files")
+	outputDir := flag.String("output", "", "Path to output directory for cmd media files")
+	namingPattern := flag.String("naming-pattern", "", "Naming pattern for cmd files")
 
 	flag.Parse()
 
@@ -51,8 +51,8 @@ func main() {
 			filesFoundCount: len(mediaFiles),
 		},
 	}
-	p.RenameFiles(*namingPattern)
-	p.PrintSummary()
+	p.renameFiles(*namingPattern)
+	p.printSummary()
 }
 
 func setup(outputDir *string, err error) error {
