@@ -34,9 +34,9 @@ func createDirIfNotExist(dirPath string) error {
 	return nil
 }
 
-func renameFileWithExtension(oldFilePath, newFileName string) error {
+func renameFileWithExtension(oldFilePath, outputDir, newFileName string) error {
 	extension := filepath.Ext(oldFilePath)
-	newFilePath := filepath.Join(filepath.Dir(oldFilePath), newFileName+extension)
+	newFilePath := filepath.Join(outputDir, newFileName+extension)
 
 	oldFile := filepath.Base(oldFilePath)
 	newFile := filepath.Base(newFilePath)

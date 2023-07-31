@@ -41,6 +41,7 @@ func main() {
 
 	p := processor{
 		fileNames: mediaFiles,
+		outputDir: outputDir,
 		metadata: filesMetadata{
 			filesFoundCount: len(mediaFiles),
 		},

@@ -15,10 +15,11 @@ type filesMetadata struct {
 
 type processor struct {
 	fileNames []string
+	outputDir string
 	metadata  filesMetadata
 }
 
-func (p *processor) renameFiles(pattern string) {
+func (p *processor) renameFiles(label string) {
 	filesProcessed := 0
 	for _, f := range p.fileNames {
 		fileInfo, err := os.Stat(f)
@@ -29,9 +30,8 @@ func (p *processor) renameFiles(pattern string) {
 		modifiedTime := fileInfo.ModTime()
 		formattedModTime := modifiedTime.Format(timeFmt)
 
-		randomStr := randomString(10)
-
-		err = renameFileWithExtension(f, fmt.Sprintf("%s-%s-%s", formattedModTime, pattern, randomStr))
+		newName := formattedModTime + "-" + label + "-" + randomString(10)
+		err = renameFileWithExtension(f, p.outputDir, newName)
 		if err != nil {
 			fmt.Println("error renaming file:", err)
 			return
