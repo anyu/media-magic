@@ -14,34 +14,28 @@ var (
 )
 
 const (
-	DefaultTargetDirName = "~/Downloads"
-	DefaultOutputDirName = "renamed"
+	defaultSourceDir = "Downloads"
+	defaultOutputDir = "renamed"
+	defaultLabel     = "renamed"
 )
 
 func main() {
 
-	mediaDir := flag.String("source", "", "Path to source directory with unorganized media files")
-	outputDir := flag.String("output", "", "Path to output directory for cmd media files")
-	namingPattern := flag.String("naming-pattern", "", "Naming pattern for cmd files")
-
-	flag.Parse()
-
-	targetDir := DefaultTargetDirName
-	if *mediaDir == "" {
-		fmt.Println("File path is missing. Defaulting to looking in Downloads")
-	} else {
-		targetDir = *mediaDir
+	sourceDir, outputDir, label, err := parseFlagsWithDefaults()
+	if err != nil {
+		fmt.Println("error parsing flags", err)
+		os.Exit(1)
 	}
 
-	mediaFiles, err := findMediaFiles(targetDir, mediaFormats)
+	mediaFiles, err := findMediaFiles(sourceDir, mediaFormats)
 	if err != nil {
 		fmt.Println("error finding media files", err)
 		os.Exit(1)
 	}
 
-	err = setup(outputDir, err)
+	err = createDirIfNotExist(outputDir)
 	if err != nil {
-		fmt.Println("error with setup", err)
+		fmt.Println("error creating dir", err)
 		os.Exit(1)
 	}
 
@@ -51,20 +45,47 @@ func main() {
 			filesFoundCount: len(mediaFiles),
 		},
 	}
-	p.renameFiles(*namingPattern)
+	p.renameFiles(label)
 	p.printSummary()
 }
 
-func setup(outputDir *string, err error) error {
-	outputDirName := DefaultOutputDirName
-	if *outputDir != "" {
-		outputDirName = *outputDir
+func parseFlagsWithDefaults() (string, string, string, error) {
+
+	sourceDir := flag.String("source", "", "Path to source directory with unorganized media files")
+	outputDir := flag.String("output", "", "Path to output directory for cmd media files")
+	label := flag.String("label", defaultLabel, "Label for renamed files")
+
+	flag.StringVar(sourceDir, "s", "", "Shorthand for source directory")
+	flag.StringVar(outputDir, "o", "", "Shorthand for output directory")
+	flag.StringVar(label, "l", "", "Shorthand for label")
+
+	flag.Parse()
+
+	sourcePath := *sourceDir
+
+	if sourcePath == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Println("Error getting user's home directory:", err)
+			return "", "", "", err
+		}
+		sourcePath = filepath.Join(homeDir, defaultSourceDir)
+		fmt.Printf("No source directory provided, using default: %s\n", sourcePath)
 	}
-	err = createDirIfNotExist(outputDirName)
-	if err != nil {
-		return err
+
+	outputPath := *outputDir
+	if outputPath == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Println("Error getting user's home directory:", err)
+			return "", "", "", err
+		}
+		outputPath = filepath.Join(homeDir, "Desktop", defaultOutputDir)
+		fmt.Printf("No output directory provided, using default: %s\n", outputPath)
+		fmt.Println()
 	}
-	return nil
+
+	return sourcePath, outputPath, *label, nil
 }
 
 func findMediaFiles(dirPath string, extensions []string) ([]string, error) {

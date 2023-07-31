@@ -19,6 +19,7 @@ func hasExtension(fileName string, extensions []string) bool {
 }
 
 func createDirIfNotExist(dirPath string) error {
+
 	_, err := os.Stat(dirPath)
 	if os.IsNotExist(err) {
 		err = os.Mkdir(dirPath, 0755)

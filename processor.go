@@ -42,6 +42,7 @@ func (p *processor) renameFiles(pattern string) {
 }
 
 func (p *processor) printSummary() {
+	fmt.Println()
 	fmt.Printf("Number of files found: %d\n", p.metadata.filesFoundCount)
 	fmt.Printf("Number of files renamed: %d\n", p.metadata.filesProcessedCount)
 	fmt.Printf("Number of files skipped: %d\n", p.metadata.filesSkippedCount)
