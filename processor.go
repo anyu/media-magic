@@ -19,26 +19,35 @@ type processor struct {
 	metadata  filesMetadata
 }
 
-func (p *processor) renameFiles(label string) {
+func (p *processor) renameAndMoveFiles(label string) {
 	filesProcessed := 0
+	filesSkipped := 0
+
+	fmt.Println()
+	fmt.Println("Renaming files and moving to output directory:", p.outputDir)
 	for _, f := range p.fileNames {
+		// Get file info for current file
 		fileInfo, err := os.Stat(f)
 		if err != nil {
 			fmt.Println(fmt.Sprintf("error getting file info for file: %s", f), err)
-			return
+			filesSkipped++
+			continue
 		}
-		modifiedTime := fileInfo.ModTime()
-		formattedModTime := modifiedTime.Format(timeFmt)
 
-		newName := formattedModTime + "-" + label + "-" + randomString(10)
+		// Generate new file name by combining the file modified time with label and random string.
+		formattedModTime := fileInfo.ModTime().Format(timeFmt)
+		newName := formattedModTime + "_" + label + "-" + randomString(10)
+
 		err = renameFileWithExtension(f, p.outputDir, newName)
 		if err != nil {
 			fmt.Println("error renaming file:", err)
-			return
+			filesSkipped++
+			continue
 		}
 		filesProcessed++
 	}
 	p.metadata.filesProcessedCount = filesProcessed
+	p.metadata.filesSkippedCount = filesSkipped
 }
 
 func (p *processor) printSummary() {

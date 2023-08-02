@@ -3,8 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"time"
+)
+
+const (
+	// Default source directory to look for media files.
+	defaultSourceDir = "Downloads"
+	// Default output directory for renamed and moved files.
+	defaultOutputDir = "renamed"
+	// Default label to use in renamed files.
+	defaultLabel = "pic"
 )
 
 var (
@@ -13,30 +24,20 @@ var (
 	mediaFormats = append(imageFormats, videoFormats...)
 )
 
-const (
-	defaultSourceDir = "Downloads"
-	defaultOutputDir = "renamed"
-	defaultLabel     = "renamed"
-)
-
 func main() {
-
 	sourceDir, outputDir, label, err := parseFlagsWithDefaults()
 	if err != nil {
-		fmt.Println("error parsing flags", err)
-		os.Exit(1)
+		log.Fatal("error parsing flags", err)
 	}
 
 	mediaFiles, err := findMediaFiles(sourceDir, mediaFormats)
 	if err != nil {
-		fmt.Println("error finding media files", err)
-		os.Exit(1)
+		log.Fatal("error finding media files", err)
 	}
 
-	err = createDirIfNotExist(outputDir)
+	err = createOutputDirIfNotExists(outputDir)
 	if err != nil {
-		fmt.Println("error creating dir", err)
-		os.Exit(1)
+		log.Fatal("error creating output dir", err)
 	}
 
 	p := processor{
@@ -46,44 +47,48 @@ func main() {
 			filesFoundCount: len(mediaFiles),
 		},
 	}
-	p.renameFiles(label)
+	p.renameAndMoveFiles(label)
 	p.printSummary()
 }
 
 func parseFlagsWithDefaults() (string, string, string, error) {
-
 	sourceDir := flag.String("source", "", "Path to source directory with unorganized media files")
-	outputDir := flag.String("output", "", "Path to output directory for cmd media files")
-	label := flag.String("label", defaultLabel, "Label for renamed files")
+	outputDir := flag.String("output", "", "Path to output directory for renamed media files")
+	label := flag.String("label", "", "Label for renamed files")
 
 	flag.StringVar(sourceDir, "s", "", "Shorthand for source directory")
 	flag.StringVar(outputDir, "o", "", "Shorthand for output directory")
-	flag.StringVar(label, "l", "", "Shorthand for label")
+	flag.StringVar(label, "l", defaultLabel, "Shorthand for label")
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: ./media-magic [options]\n")
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		flag.PrintDefaults()
+	}
 
 	flag.Parse()
 
 	sourcePath := *sourceDir
-
 	if sourcePath == "" {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
-			fmt.Println("Error getting user's home directory:", err)
+			fmt.Println("error getting user's home directory:", err)
 			return "", "", "", err
 		}
 		sourcePath = filepath.Join(homeDir, defaultSourceDir)
-		fmt.Printf("No source directory provided, using default: %s\n", sourcePath)
+		fmt.Println("No source directory provided, using default:", sourcePath)
 	}
 
 	outputPath := *outputDir
 	if outputPath == "" {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
-			fmt.Println("Error getting user's home directory:", err)
+			fmt.Println("error getting user's home directory:", err)
 			return "", "", "", err
 		}
-		outputPath = filepath.Join(homeDir, "Desktop", defaultOutputDir)
-		fmt.Printf("No output directory provided, using default: %s\n", outputPath)
-		fmt.Println()
+		currentDate := time.Now().Format(timeFmt)
+		outputPath = filepath.Join(homeDir, "Desktop", currentDate+"_"+defaultOutputDir)
+		fmt.Println("No output directory provided, using default:", outputPath)
 	}
 
 	return sourcePath, outputPath, *label, nil
